@@ -27,41 +27,59 @@ tr:nth-child(even){background-color: #f2f2f2}
 </head>
 <body>
     <h1>Select CSV file here</h1>
-    <input type="file" accept=".csv" id="input-file" onchange="getFile(event)" />
+    <input type="file" accept=".csv" id="file" />
     <h1>See weird lines here</h1>
     <table>
-        <tbody>
+        <tbody id="output">
             <tr>
-                <th>line</th>
-                <th>weird character</th>
-                <th>original line</th>
+                <th>Line Number</th>
+                <th>Weird characters</th>
+                <th>Original Line</th>
             </tr>
             <tr>
                 <td>2</td>
-                <td><pre>∏</pre></td>
-                <td><pre>true, Alice, 3∏, Bob</pre></td>
+                <td><pre>�</pre></td>
+                <td><pre>this,is,example,�data</pre></td>
             </tr>    
             <tr>
                 <td>5</td>
-                <td><pre>∏</pre></td>
-                <td><pre>false, Charlie, 6∏, Eve</pre></td>
+                <td><pre>��</pre></td>
+                <td><pre>this is,also�example,�data</pre></td>
             </tr>    
         </tbody>
     </table>
     <script>
-        function getFile({target}) {
-            if ('files' in target && target.files.length > 0) {
-                readFileContent(target.files[0])
-                .then(window.alert)
+        document.getElementById("file").addEventListener("change", readFile)
+        async function readFile(event) {
+            if ('files' in event.target && event.target.files.length > 0) {
+                const file = event.target.files[0]
+                const reader = new FileReader()
+                return new Promise((resolve, reject) => {
+                    reader.onload = event => resolve(event.target.result)
+                    reader.onerror = error => reject(error)
+                    reader.readAsText(file)
+                }).then(findWeirdLines).then(displayBadLines).catch(alert)
             }
         }
 
-        async function readFileContent(file) {
-            const reader = new FileReader()
-            return new Promise((resolve, reject) => {
-                reader.onload = event => resolve(event.target.result)
-                reader.onerror = error => reject(error)
-                reader.readAsText(file)
+        function findWeirdLines (csvText) {
+            var validChars = "a-z@_A-Z0-9 ,./$<>()#&%?:!'\"\\-\\[\\]\\t\\\\" // backslash-t is a tab
+            var endOfLine = "\n"
+            var lineNumber = 0
+            const badLines = []
+            csvText.split(endOfLine).forEach(line => {
+                lineNumber = lineNumber + 1 // keep track of line number to help user locate the line.
+                var weirdChars = line.replace(new RegExp("["+validChars+"]", "g"), "") // delete all VALID characters; any remaining chars are weird.
+                if (weirdChars) badLines.push({lineNumber, weirdChars, line})
+            })
+            return badLines
+        }
+
+        function displayBadLines (badLines) {
+            const tbody = document.querySelector("#output")
+            /* clear */ ;[...tbody.querySelectorAll("tr")].slice(1).forEach(el => tbody.removeChild(el))
+            badLines.forEach(({lineNumber, weirdChars, line}) => {
+                tbody.innerHTML += `<tr><td>${lineNumber}</td><td>${weirdChars}</td><td>${line}</td></tr>`
             })
         }
     </script>
