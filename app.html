@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+
+table {
+    width: 100%;
+}
+th, td {
+  text-align: left;
+  padding: 8px;
+}
+th {
+  background-color: #4CAF50;
+  color: white;
+}
+table { border: none; border-collapse: collapse; }
+td,th { border-left: 1px solid #000; }
+td:first-child,th:first-child { border-left: none; }
+tr:nth-child(even){background-color: #f2f2f2}
+
+    </style>
+</head>
+<body>
+    <h1>Select CSV file here</h1>
+    <input type="file" accept=".csv" id="input-file" onchange="getFile(event)" />
+    <h1>See weird lines here</h1>
+    <table>
+        <tbody>
+            <tr>
+                <th>line</th>
+                <th>weird character</th>
+                <th>original line</th>
+            </tr>
+            <tr>
+                <td>2</td>
+                <td><pre>∏</pre></td>
+                <td><pre>true, Alice, 3∏, Bob</pre></td>
+            </tr>    
+            <tr>
+                <td>5</td>
+                <td><pre>∏</pre></td>
+                <td><pre>false, Charlie, 6∏, Eve</pre></td>
+            </tr>    
+        </tbody>
+    </table>
+    <script>
+        function getFile({target}) {
+            if ('files' in target && target.files.length > 0) {
+                readFileContent(target.files[0])
+                .then(window.alert)
+            }
+        }
+
+        async function readFileContent(file) {
+            const reader = new FileReader()
+            return new Promise((resolve, reject) => {
+                reader.onload = event => resolve(event.target.result)
+                reader.onerror = error => reject(error)
+                reader.readAsText(file)
+            })
+        }
+    </script>
+</body>
+</html>
